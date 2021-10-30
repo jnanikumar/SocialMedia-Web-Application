@@ -1,0 +1,11 @@
+.fa{
+    color:rgb(124, 68, 68);
+    /* border: 1px strong red; */
+    font-size: 30px;
+    outline: rgba(194, 31, 31, 0.39);
+    padding-left:8px;
+}
+.fa:hover{
+    color:red;
+    cursor:pointer;
+}
