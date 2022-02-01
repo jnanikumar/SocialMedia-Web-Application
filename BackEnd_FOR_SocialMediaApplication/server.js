@@ -1,7 +1,9 @@
+require("dotenv").config();
 const express = require("express")
 const mongoose=require("mongoose")
 const User=require("./Models/Users")
 const jwt=require("jsonwebtoken")
+const bcrypt = require("bcrypt")
 const middleware=require("./middleware")
 const cors=require("cors")
 const app=express()
@@ -17,8 +19,14 @@ mongoose.connect("mongodb+srv://jnanikumar:Vadi1111@cluster0.bq5rq.mongodb.net/m
 
 app.post("/signup",async (req,res)=>{
     const {name,email,password,description}=req.body
-    var newData=new User({name,email,password,description})
-    await newData.save()
+
+    //now we hash password using bcrypt 
+    bcrypt.hash(password,10,async (err,hashedPassword) => {
+        var newData=new User({name,email,hashedPassword,description})
+        await newData.save()
+    });
+
+    
     res.json(await User.find({email}))
     res.end();
 })
@@ -30,16 +38,21 @@ app.post("/login",async (req,res)=>{
     if (!user){
         return res.send("user not found please check your email id")
     }
-    if (password!=user.password){
-        
-        return res.send("password doesnot match")
+    
+    //comparing passwords
+
+    const match = bcrypt.compare(password,user.password);
+
+    if(!match) {
+        return res.send("passwords does not match");
     }
+
     const payload={
         currentuser:{
             id:user.id
         }
     }
-    jwt.sign(payload,"secretkey",{expiresIn:3600000},(err,token)=>{
+    jwt.sign(payload,process.env.JWT_KEY,{expiresIn:3600000},(err,token)=>{
 
         if(err){
             console.log(err)
@@ -120,6 +133,6 @@ app.get("/getUsers",async (req,res)=>{
     
 // })
 
-app.listen(8000,()=>{
+app.listen(process.env.PORT,()=>{
     console.log("running on 8000 port")
 })
